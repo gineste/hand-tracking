@@ -18,6 +18,11 @@ videocapture = cv2.VideoCapture(0)
 _, frame = videocapture.read()
 h, w, c = frame.shape
 
+# resizing parameters
+resize_ratio = 0.3
+resize_width = int(w*resize_ratio)
+resize_height = int(h*resize_ratio)
+
 mpHands = mp.solutions.hands
 drawingModule = mp.solutions.drawing_utils
 hands = mpHands.Hands(max_num_hands=1,
@@ -57,7 +62,9 @@ def compute_depth_cm(finger1, finger2):
 ########### BOUCLE de calcul et d'affichage
 while True:
     success, img = videocapture.read()
-    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # resize image
+    img_resized = cv2.resize(img, (resize_width, resize_height), interpolation=cv2.INTER_NEAREST)
+    imgRGB = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
     # trouver et calculer les mains:
     results = hands.process(imgRGB)
     cv2.rectangle(img, (10, 50), (30, 200), (100, 100, 100), 3)
@@ -103,5 +110,5 @@ while True:
     cv2.imshow("window", img)
     c = cv2.waitKey(1)
     if c == 27:  # escape to exit
+        cv2.destroyAllWindows()
         break
-        cv2.destroyAlqlWindows()
