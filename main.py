@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
+from ServoMotorClass import *
 try:
     import RPi.GPIO as GPIO
     rasp = True
@@ -17,6 +18,10 @@ except:
 videocapture = cv2.VideoCapture(0)
 _, frame = videocapture.read()
 h, w, c = frame.shape
+
+# start servomotor
+myservo = ServoMotorClass(12)
+myservo.start()
 
 # resizing parameters
 resize_ratio = 0.3
@@ -58,7 +63,7 @@ def compute_depth_cm(finger1, finger2):
     average_depth = (finger1.z + finger2.z)/2
     distance_cm = -1.32 + 7.2298*(1/(0.03-average_depth))
     return round(max(0, distance_cm))
-
+move_number=0
 ########### BOUCLE de calcul et d'affichage
 while True:
     success, img = videocapture.read()
@@ -69,6 +74,7 @@ while True:
     results = hands.process(imgRGB)
     cv2.rectangle(img, (10, 50), (30, 200), (100, 100, 100), 3)
     # si on a une réponse (results.multi_hand_landmarks existe):
+
     if results.multi_hand_landmarks:
         profondeur_main = None
         # on boucle pour chaque main mais comme il n'y a qu'une main dans le paramétrage, c'est une seule fois.
@@ -99,14 +105,15 @@ while True:
                 cv2.rectangle(img, (15, min_jauge), (25, int(cur_jauge)), (0, 255, 0), -1)
                 cv2.rectangle(img, (10, 50), (30, 200), (0, 255, 0), 3)
                 cv2.putText(img, "{} cm".format(int(dist)), (35, int(cur_jauge+15)), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 3)
+                myservo.goto_percent(min(100, dist/25*100))
     cTime = time.time()
     fps = 1 / (cTime - pTime)
     pTime = cTime
     cv2.putText(img, "{} fps".format(int(fps)), (5, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
     # full screen!:
-    cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    #cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+    #cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.imshow("window", img)
     c = cv2.waitKey(1)
     if c == 27:  # escape to exit
