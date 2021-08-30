@@ -43,7 +43,7 @@ little_y = 0
 dist = 0
 previous_valid_depth = None
 correction_factor_hand_z_1 = 150
-correction_factor_hand_z_2 = 0.7
+correction_factor_hand_z_2 = 0.8
 
 def checked_depth_mm(depth):
     depth = min(3000, max(1, depth))
@@ -52,7 +52,7 @@ def checked_depth_mm(depth):
 def compute_depth_cm(finger1, finger2):
     average_depth = (finger1.z + finger2.z)/2
     distance_cm = -1.32 + 7.2298*(1/(0.03-average_depth))
-    return round(distance_cm)
+    return round(max(0, distance_cm))
 
 ########### BOUCLE de calcul et d'affichage
 while True:
@@ -69,8 +69,6 @@ while True:
             print("___________new hand")
             doigt_pouce = chaque_main.landmark[mpHands.HandLandmark.THUMB_TIP]
             doigt_index = chaque_main.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP]
-            print(doigt_index.z)
-            print(doigt_pouce.z)
             profondeur_main = compute_depth_cm(doigt_index, doigt_pouce)
             print("profondeur main cm : {}".format(profondeur_main))
             doigt_pouce_coords = drawingModule._normalized_to_pixel_coordinates(doigt_pouce.x, doigt_pouce.y, w, h)
@@ -78,8 +76,10 @@ while True:
             if doigt_index_coords and doigt_pouce_coords:
                 # calculer la distance entre les 2 doigts, corrigé par la profondeur (correction approx)
                 dist = math.sqrt((doigt_index_coords[1] - doigt_pouce_coords[1])**2 + (doigt_index_coords[0] - doigt_pouce_coords[0])**2)
-                dist = dist * profondeur_main**(correction_factor_hand_z_2) / correction_factor_hand_z_1
-                dist = checked_depth_mm(dist)
+                print(dist)
+                print(type(dist))
+                dist = round( dist * profondeur_main**(correction_factor_hand_z_2) / correction_factor_hand_z_1 )
+                #dist = checked_depth_mm(dist)
                 print("ecart doigts mm : {}".format(dist))
                 cv2.circle(img, doigt_pouce_coords, 15, (255, 0, 255), cv2.FILLED)
                 cv2.circle(img, doigt_index_coords, 15, (255, 0, 255), cv2.FILLED)
