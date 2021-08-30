@@ -60,7 +60,7 @@ while True:
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # trouver et calculer les mains:
     results = hands.process(imgRGB)
-
+    cv2.rectangle(img, (10, 50), (30, 200), (100, 100, 100), 3)
     # si on a une réponse (results.multi_hand_landmarks existe):
     if results.multi_hand_landmarks:
         profondeur_main = None
@@ -76,8 +76,6 @@ while True:
             if doigt_index_coords and doigt_pouce_coords:
                 # calculer la distance entre les 2 doigts, corrigé par la profondeur (correction approx)
                 dist = math.sqrt((doigt_index_coords[1] - doigt_pouce_coords[1])**2 + (doigt_index_coords[0] - doigt_pouce_coords[0])**2)
-                print(dist)
-                print(type(dist))
                 dist = round( dist * profondeur_main**(correction_factor_hand_z_2) / correction_factor_hand_z_1 )
                 #dist = checked_depth_mm(dist)
                 print("ecart doigts mm : {}".format(dist))
@@ -86,13 +84,18 @@ while True:
                 # dessiner les points de la main et les liens entre eux.
                 mpDraw.draw_landmarks(img, chaque_main, mpHands.HAND_CONNECTIONS)
                 cv2.line(img, doigt_pouce_coords, doigt_index_coords, (0, 255, 0), thickness=3, lineType=8)
-                coords_text = 0
-                cv2.putText(img, str(int(dist)), doigt_pouce_coords, cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
+                # draw gauge (le point 0,0 est en haut à gauche !! attention
+                max_dist  = 25
+                min_jauge = 195
+                max_jauge = 55
+                cur_jauge = max(max_jauge, min(min_jauge, min_jauge - dist/max_dist * (min_jauge-max_jauge)))
+                cv2.rectangle(img, (15, min_jauge), (25, int(cur_jauge)), (0, 255, 0), -1)
+                cv2.rectangle(img, (10, 50), (30, 200), (0, 255, 0), 3)
+                cv2.putText(img, "{} cm".format(int(dist)), (35, int(cur_jauge+15)), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 3)
     cTime = time.time()
     fps = 1 / (cTime - pTime)
     pTime = cTime
-    cv2.putText(img, str(int(fps)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
-
+    cv2.putText(img, "{} fps".format(int(fps)), (5, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
     # full screen!:
     cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
