@@ -19,3 +19,9 @@ numpy était trop vieux et pas compatible donc:
 `pip3 install numpy --upgrade` \
 
 Là ca doit fonctionner. 
+
+
+# Branches du repo
+
+la branche develop est en cours ;
+La branche develop-servo-raspberry contient une classe servo spécifique au controle direct via le raspberry, et non l'arduino.
