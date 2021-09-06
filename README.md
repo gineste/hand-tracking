@@ -1,4 +1,4 @@
-# Reconnaissance de la main et tracking de points
+# Reconnaissance de la main et tracking de points 
 
 Ce repo propose la mise en oeuvre de scripts simples inspirés du tutoriel de la chaine youtube de robotique et AI *Murtaza videos* voir ici:
 https://www.youtube.com/watch?v=NZde8Xt78Iw
