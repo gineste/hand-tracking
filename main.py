@@ -2,8 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
-import serial
-# from ServoMotorClass import *
+from ServoMotorClass import *
 try:
     import RPi.GPIO as GPIO
     rasp = True
@@ -20,12 +19,9 @@ videocapture = cv2.VideoCapture(0)
 _, frame = videocapture.read()
 h, w, c = frame.shape
 
-## start servomotor
-# myservo = ServoMotorClass(12)
-# myservo.start()
-
-# lancer la connection série avec l'arduino
-con = serial.Serial("COM6", 115200)
+# start servomotor
+myservo = ServoMotorClass(12)
+myservo.start()
 
 # resizing parameters
 resize_ratio = 0.3
@@ -59,20 +55,6 @@ previous_valid_depth = None
 correction_factor_hand_z_1 = 150
 correction_factor_hand_z_2 = 0.8
 
-def map_custom(value, leftMin, leftMax, rightMin, rightMax):
-    # Figure out how 'wide' each range is
-    leftSpan = leftMax - leftMin
-    rightSpan = rightMax - rightMin
-    # Convert the left range into a 0-1 range (float)
-    valueScaled = float(value - leftMin) / float(leftSpan)
-    # Convert the 0-1 range into a value in the right range.
-    toreturn_unbound = rightMin + (valueScaled * rightSpan)
-    if rightMax>rightMin:
-        toreturn_bounded = min(rightMax, max(rightMin, toreturn_unbound))
-    else:
-        toreturn_bounded = min(rightMin, max(rightMax, toreturn_unbound))
-    return int(toreturn_bounded)
-
 def checked_depth_mm(depth):
     depth = min(3000, max(1, depth))
     return round(depth)
@@ -82,9 +64,6 @@ def compute_depth_cm(finger1, finger2):
     distance_cm = -1.32 + 7.2298*(1/(0.03-average_depth))
     return round(max(0, distance_cm))
 move_number=0
-
-angle = 70
-
 ########### BOUCLE de calcul et d'affichage
 while True:
     success, img = videocapture.read()
@@ -126,12 +105,7 @@ while True:
                 cv2.rectangle(img, (15, min_jauge), (25, int(cur_jauge)), (0, 255, 0), -1)
                 cv2.rectangle(img, (10, 50), (30, 200), (0, 255, 0), 3)
                 cv2.putText(img, "{} cm".format(int(dist)), (35, int(cur_jauge+15)), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 3)
-                # myservo.goto_percent(min(100, dist/25*100))
-                # envoyer l'ordre au servo
-                # angle = map_custom(dist, 1, 25, 160, 70)
-                angle += 0.1
-                con.write(str(int(angle)).encode("utf-8"))
-                print("sending to servo angle: {}".format(angle))
+                myservo.goto_percent(min(100, dist/25*100))
     cTime = time.time()
     fps = 1 / (cTime - pTime)
     pTime = cTime
