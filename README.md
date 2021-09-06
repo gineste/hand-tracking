@@ -9,7 +9,7 @@ La bibliothèque python mediapipe (avec cv2 pour l'acquisition video) fournit to
 
 la librairie permet de calculer des métriques sur des points particuliers de la main.
 (à venir)
-
+ 
 # installation sur raspberry (4)
 
 `sudo apt-get update` \
