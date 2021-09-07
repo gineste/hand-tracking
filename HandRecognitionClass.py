@@ -6,6 +6,7 @@ import mediapipe as mp
 from PatternObserverClass import *
 import time
 import math
+import threading
 from threading import Thread
 
 
@@ -53,6 +54,7 @@ class HandRecognitionClass(Observable, Thread):
         self.h, self.w, self.c = frame.shape
 
     def run(self):
+        print("thread id of loop hands = {}".format(threading.get_ident()))
         mpHands = mp.solutions.hands
         drawingModule = mp.solutions.drawing_utils
         hands = mpHands.Hands(max_num_hands=1,

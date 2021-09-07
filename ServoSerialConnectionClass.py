@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -- coding: utf-8 --
 import time
+import threading
 from threading import Thread
 from PatternObserverClass import *
 import serial
@@ -9,13 +10,8 @@ import glob
 import serial
 
 
+# Fonction qui cherche les ports séries disponibles. On prendra le premier de la liste! Windows ou Linux
 def serial_ports():
-    """ Lists serial port names
-        :raises EnvironmentError:
-            On unsupported or unknown platforms
-        :returns:
-            A list of the serial ports available on the system
-    """
     if sys.platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
     elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
@@ -25,7 +21,6 @@ def serial_ports():
         ports = glob.glob('/dev/tty.*')
     else:
         raise EnvironmentError('Unsupported platform')
-
     result = []
     for port in ports:
         try:
@@ -36,6 +31,8 @@ def serial_ports():
             pass
     return result
 
+
+# fonction équivalent au map() sur arduino
 def map_custom(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
@@ -51,7 +48,7 @@ def map_custom(value, leftMin, leftMax, rightMin, rightMax):
     return int(toreturn_bounded)
 
 
-# l'objet Servo est un thread observable qui est observé par la caméra...
+# l'objet Servo est un thread observer.
 class ServoSerialConnectionClass(Observer, Thread):
     def __init__(self, name, baudrate=9600, port="auto", angle_range=(70, 155), verbose=False):  # ex: 12
         Thread.__init__(self)
@@ -59,25 +56,28 @@ class ServoSerialConnectionClass(Observer, Thread):
         self.verbose = verbose
         self.baudrate = baudrate
         self.angle_range = angle_range
-        self.angle = str(int((angle_range[0] + angle_range[1])/2))
+        self.current_angle = int((angle_range[0] + angle_range[1])/2)
+        print("angle initi = {}".format(self.current_angle))
         if port == "auto":
             self.port = serial_ports()[0]
         else:
             self.port = port
         self.servo_connection = serial.Serial(baudrate=self.baudrate, port=self.port)
 
-    def run(self):
+    def loop_and_wait_for_callback_arduino(self):
         while True:
-            print("here!  <----------------")
-            print(self.port)
-            print(self.servo_connection)
-            self.servo_connection.write(self.angle.encode())
-            reached_position = str(self.servo_connection.readline())
+            self.servo_connection.write(str(self.current_angle).encode())
+            reached_position = str(self.servo_connection.readline()) # environ 500ms de délai
             print(reached_position)
 
     def update(self, news: ObservableData):
-        self.angle = str(map_custom(news.value, 0, 1, self.angle_range[1], self.angle_range[0]))
-        if self.verbose: print("{} received {}, converted to {}, from {}".format(self.name, news.value, self.angle, news.from_who))
+        self.current_angle = map_custom(news.value, 0, 1, self.angle_range[1], self.angle_range[0])
+        if self.verbose: print("{} received {}, converted to {}, from {}".format(self.name, news.value, self.current_angle, news.from_who))
+
+    def run(self):
+        time.sleep(2) # pour raison inconnue, si on fait pas ca, ca foire (le terminal série n'est pas pret)
+        self.loop_and_wait_for_callback_arduino()
+
 
 if __name__ == "__main__":
     myservo = ServoSerialConnectionClass(name="DSSERVO_20kg", verbose=True)
