@@ -127,8 +127,8 @@ class HandRecognitionClass(Observable, Thread):
             cv2.putText(img, "{} fps".format(int(fps)), (5, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
             # full screen!:
-            # cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-            # cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+            cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow("window", img)
             c = cv2.waitKey(1)
             if c == 27:  # escape to exit
