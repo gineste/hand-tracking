@@ -50,7 +50,7 @@ def map_custom(value, leftMin, leftMax, rightMin, rightMax):
 
 # l'objet Servo est un thread observer.
 class ServoSerialConnectionClass(Observer, Thread):
-    def __init__(self, name, baudrate=9600, port="auto", angle_range=(70, 155), verbose=False):  # ex: 12
+    def __init__(self, name, baudrate=115200, port="auto", angle_range=(70, 155), verbose=False):  # ex: 12
         Thread.__init__(self)
         self.name = name
         self.verbose = verbose
@@ -66,9 +66,12 @@ class ServoSerialConnectionClass(Observer, Thread):
 
     def loop_and_wait_for_callback_arduino(self):
         while True:
-            self.servo_connection.write(str(self.current_angle).encode())
-            reached_position = str(self.servo_connection.readline()) # environ 500ms de délai
+            print("angle to be send = {}".format(self.current_angle))
+            self.servo_connection.write(str(self.current_angle).encode("utf-8"))
+            time.sleep(0.1)
+            reached_position = str(self.servo_connection.readline().decode("utf-8").rstrip()) # environ 500ms de délai
             print(reached_position)
+            #time.sleep(250)
 
     def update(self, news: ObservableData):
         self.current_angle = map_custom(news.value, 0, 1, self.angle_range[1], self.angle_range[0])

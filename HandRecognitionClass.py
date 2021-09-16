@@ -36,15 +36,16 @@ def map_custom(value, leftMin, leftMax, rightMin, rightMax):
     return int(toreturn_bounded)
 
 
-class HandRecognitionClass(Observable, Thread):
-    def __init__(self, name, resize_ratio=0.3, verbose=False):
+class HandRecognitionClass(Observable):#, Thread):
+    def __init__(self, name, resize_ratio=0.3, verbose=False, camera_id=0):
         # lancer le thread
-        Thread.__init__(self)
+        #Thread.__init__(self)
         self.name = name
         self.observer_list = set()
         self.verbose = verbose
+        self.camera_id = camera_id
         # lancer la capture et sur une première capture récupérer les dimensions de l'image.
-        self.videocapture = cv2.VideoCapture(0)
+        self.videocapture = cv2.VideoCapture(camera_id)
         self.get_window_parameters()
         self.resize_width = int(self.w * resize_ratio)
         self.resize_height = int(self.h * resize_ratio)
@@ -53,13 +54,13 @@ class HandRecognitionClass(Observable, Thread):
         _, frame = self.videocapture.read()
         self.h, self.w, self.c = frame.shape
 
-    def run(self):
+    def start(self): #run(self):
         print("thread id of loop hands = {}".format(threading.get_ident()))
         mpHands = mp.solutions.hands
         drawingModule = mp.solutions.drawing_utils
         hands = mpHands.Hands(max_num_hands=1,
-                                   min_detection_confidence=0.75,
-                                   min_tracking_confidence=0.95)
+                                   min_detection_confidence=0.8,
+                                   min_tracking_confidence=0.97)
         mpDraw = mp.solutions.drawing_utils
         mpDraw.draw_landmarks
         pTime = 0
@@ -127,8 +128,8 @@ class HandRecognitionClass(Observable, Thread):
             cv2.putText(img, "{} fps".format(int(fps)), (5, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
             # full screen!:
-            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            #cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+            #cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow("window", img)
             c = cv2.waitKey(1)
             if c == 27:  # escape to exit
